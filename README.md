@@ -39,6 +39,8 @@ against four different kinds of vectors
 
 and prints the resulting accaurcies. 
 
+## Word Cloud
+
 ```cmd
 python wordcloud.py
 ```
