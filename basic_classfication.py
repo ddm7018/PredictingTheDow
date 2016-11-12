@@ -8,16 +8,17 @@ from sklearn.cross_validation 			import train_test_split
 from sklearn.tree 						import DecisionTreeClassifier
 from sklearn.ensemble 					import RandomForestClassifier, AdaBoostClassifier, GradientBoostingClassifier
 from sklearn.naive_bayes 				import GaussianNB
+import multiprocessing
 import pickle, os
-
+from multiprocessing import Manager
 import warnings
 with warnings.catch_warnings():
 	warnings.simplefilter("ignore")
 	from sklearn.lda 						import LDA
 	from sklearn.qda  						import QDA
 
-from nltk.stem.snowball import EnglishStemmer
-stemmer = EnglishStemmer()
+from nltk.stem.porter import PorterStemmer
+stemmer = PorterStemmer()
 analyzer = CountVectorizer().build_analyzer()
 
 def stemmed_words(doc):
@@ -58,8 +59,8 @@ def tdIdfVectorize1(trainheadlines, testheadlines):
 def runKNN(basictrain,basictest, train,test, label):
 	maxAccuracy = 0
 	val = 0
-	print "Beginning KNN runs"
-	for x in range(1,300):
+	#print "Beginning KNN runs"
+	for x in range(1,250):
 		neigh = KNeighborsClassifier(n_neighbors=x)
 		neigh.fit(basictrain, train[label])
 		predictions 	= neigh.predict(basictest)
@@ -69,7 +70,7 @@ def runKNN(basictrain,basictest, train,test, label):
 			maxAccuracy = accuracy_score(test[label], predictions)
 			val = x
 	print "KNN of n = "+str(val),
-	print "gives an accuracy of " + str(maxAccuracy) 
+	print "gives an accuracy of \t\t  " + str(maxAccuracy) 
 	return neigh
 
 def runLogisticReegresion(basictrain,basictest, train,test,label):
@@ -77,7 +78,7 @@ def runLogisticReegresion(basictrain,basictest, train,test,label):
 	logModel 		= logModel.fit(basictrain, train[label])
 	predictions 	= logModel.predict(basictest)
 	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
-	print "Running Logistical Regression gives accuracy of ",
+	print "Running Logistical Regression gives accuracy of  ",
 	print accuracy_score(test[label], predictions)
 	return logModel
 
@@ -86,7 +87,7 @@ def runLinearSVC(basictrain,basictest, train,test,label):
 	clf.fit(basictrain, train[label])
 	predictions = clf.predict(basictest)
 	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
-	print "Running LinearSVC gives accuracy of ",
+	print "Running LinearSVC gives accuracy of\t\t ",
 	print accuracy_score(test[label], predictions)
 	return clf
 
@@ -103,7 +104,7 @@ def decisionTree(basictrain,basictest, train,test,label):
 	clf.fit(basictrain, train[label])
 	predictions = clf.predict(basictest)
 	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
-	print "Running Decision Tree gives accuracy of ",
+	print "Running Decision Tree gives accuracy of    \t ",
 	print accuracy_score(test[label], predictions)
 	return clf
 
@@ -136,7 +137,7 @@ def addBoost(basictrain,basictest, train,test,label):
 	clf.fit(basictrain, train[label])
 	predictions = clf.predict(basictest)
 	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
-	print "Running Ada Boost gives accuracy of ",
+	print "Running Ada Boost gives accuracy of \t\t ",
 	print accuracy_score(test[label], predictions)
 	return clf
 
@@ -215,9 +216,52 @@ if not os.path.isfile("vectors.p"):
 else:
 	vectorDict = pickle.load( open( "vectors.p", "rb" ))
 
-def run(label):
-	for key,value in vectorDict.iteritems():
-		print 'Running with ' + str(key)
+label = 'Label'
+jobs = []
+manager = Manager()
+return_dict = manager.dict()
+
+for key,value in vectorDict.iteritems():
+	#print 'Running with ' + str(key)
+	p = multiprocessing.Process(target=runKNN, args=(value[0],value[1],train,test, label,))
+	jobs.append(p)
+	p.start()
+
+
+	p = multiprocessing.Process(target=runLogisticReegresion, args=(value[0],value[1],train,test, label,))
+	jobs.append(p)
+	p.start()
+
+	p = multiprocessing.Process(target=runLinearSVC, args=(value[0],value[1],train,test, label,))
+	jobs.append(p)
+	p.start()
+
+	p = multiprocessing.Process(target=runRandomForestClassifier, args=(value[0],value[1],train,test, label,))
+	jobs.append(p)
+	p.start()
+
+	p = multiprocessing.Process(target=decisionTree, args=(value[0],value[1],train,test, label,))
+	jobs.append(p)
+	p.start()
+
+
+	if key != 'Count Vector with ngram of 2,2':
+	
+		p = multiprocessing.Process(target=runLDA, args=(value[0].toarray(),value[1].toarray(),train,test, label,))
+		jobs.append(p)
+		p.start()
+
+		p = multiprocessing.Process(target=runQDA, args=(value[0].toarray(),value[1].toarray(),train,test, label,))
+		jobs.append(p)
+		p.start()
+
+	p = multiprocessing.Process(target=addBoost, args=(value[0],value[1],train,test, label,))
+	jobs.append(p)
+	p.start()
+
+	for proc in jobs: proc.join()
+
+        '''
 		runKNN(value[0],value[1],train,test, label)
 		runLogisticReegresion(value[0],value[1],train,test,label)
 		runLinearSVC(value[0],value[1],train,test,label)
@@ -229,9 +273,9 @@ def run(label):
 		#gaussianNB(value[0],value[1],train,test)
 		addBoost(value[0],value[1],train,test,label)
 		print "\n"
+		'''
 
-
-run("Label")	
+#run("Label")	
 '''
 
 #CoefToHTML(cvVector,logCV,"log-countVector")

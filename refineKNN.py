@@ -4,8 +4,9 @@ from sklearn.metrics					import accuracy_score
 import pickle, os
 import numpy as np
 from sklearn.feature_extraction.text 	import CountVectorizer
-
+import multiprocessing
 from nltk.stem.porter import PorterStemmer
+from multiprocessing import Manager
 
 stemmer = PorterStemmer()
 analyzer = CountVectorizer().build_analyzer()
@@ -21,7 +22,7 @@ def countVectorize(trainheadlines,testheadlines):
 	return basictrain, basictest, basicvectorizer
 
 
-def runKNN(basictrain,basictest, train,test):
+def runKNN(basictrain,basictest, train,test, ):
 	knnDict = {}
 	maxAccuracy = 0
 	val = 0
@@ -34,9 +35,9 @@ def runKNN(basictrain,basictest, train,test):
 		knnDict[x] 		= accuracy_score(test["Label"], predictions) 
 
 	return knnDict
+	
 
-
-def vectorize(train, test):
+def vectorize(train, test,num, return_dict):
 
 	testheadlines = []
 	trainheadlines = []
@@ -50,7 +51,8 @@ def vectorize(train, test):
 		trainheadlines.append(' '.join(str(x) for x in train.iloc[row,2:3]))
 
 	cvtrain, cvtest, cvVector = countVectorize(trainheadlines,testheadlines)
-	return runKNN(cvtrain,cvtest, train,test)
+	return_dict[num] = runKNN(cvtrain,cvtest, train,test)
+	#return runKNN(cvtrain,cvtest, train,test)
 
 
 data 	= 	pandas.read_csv("stocknews/Combined_News_DJIA.csv")
@@ -85,24 +87,49 @@ train5 = n5.append(n2).append(n3).append(n4)
 test5 = n1
 
 
-print '1' 
-r1 = vectorize(train1, test1) 
-print '2'
-r2 = vectorize(train2, test2)
-print '3'
-r3 = vectorize(train3, test3) 
-print '4'
-r4 = vectorize(train4, test4) 
-print '5'
-r5 = vectorize(train5, test5) 
+print 'here'
+
+jobs = []
+manager = Manager()
+return_dict = manager.dict()
+
+
+
+p = multiprocessing.Process(target=vectorize, args=(train1, test1,1,return_dict,))
+jobs.append(p)
+p.start()
+
+p = multiprocessing.Process(target=vectorize, args=(train2, test2,2,return_dict,))
+jobs.append(p)
+p.start()
+
+p = multiprocessing.Process(target=vectorize, args=(train3, test3,3,return_dict,))
+jobs.append(p)
+p.start()
+
+p = multiprocessing.Process(target=vectorize, args=(train4, test4,4,return_dict,))
+jobs.append(p)
+p.start()
+
+p = multiprocessing.Process(target=vectorize, args=(train5, test5,5,return_dict,))
+jobs.append(p)
+p.start()
+
+for proc in jobs:
+	proc.join()
+
 
 best = 0
 bestI = 0
 
-for x in range(1,200):
-	sumR = r1[x] + r2[x] + r3[x] + r4[x] + r5[x]
+for x in range(100,300):
+	#sumR = r1[x] + r2[x] + r3[x] + r4[x] + r5[x]
+	sumR = return_dict.values()[0][x] + return_dict.values()[1][x] + return_dict.values()[2][x] + return_dict.values()[3][x] +return_dict.values()[4][x]
+
+
 	if sumR > best:
             best = sumR
             bestI = x
  
 print "KNN with neigh " + str(bestI) +  " gave the best accuracies of " + str(best/5)
+
