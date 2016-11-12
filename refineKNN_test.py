@@ -5,9 +5,8 @@ import pickle, os
 import numpy as np
 from sklearn.feature_extraction.text 	import CountVectorizer
 
-from nltk.stem.porter import PorterStemmer
-
-stemmer = PorterStemmer()
+from nltk.stem.snowball import EnglishStemmer
+stemmer = EnglishStemmer()
 analyzer = CountVectorizer().build_analyzer()
 
 def stemmed_words(doc):
@@ -25,9 +24,9 @@ def runKNN(basictrain,basictest, train,test):
 	knnDict = {}
 	maxAccuracy = 0
 	val = 0
-	print "Beginning KNN runs"
-	for x in range(100,300):
-		neigh = KNeighborsClassifier(n_neighbors=x)
+	#print "Beginning KNN runs"
+	for x in range(1,200):
+		neigh = KNeighborsClassifier(n_neighbors=x, algorithm = 'auto')
 		neigh.fit(basictrain, train["Label"])
 		predictions 	= neigh.predict(basictest)
 		matrix 			= pandas.crosstab(test["Label"], predictions, rownames=["Actual"], colnames=["Predicted"])
@@ -36,18 +35,18 @@ def runKNN(basictrain,basictest, train,test):
 	return knnDict
 
 
-def vectorize(train, test):
+def vectorize(train, test,x):
 
 	testheadlines = []
 	trainheadlines = []
 	for row in range(0,len(test.index)):
 	    #testheadlines.append(' '.join(str(x) for x in test.iloc[row,2:27]))
-	    testheadlines.append(' '.join(str(x) for x in test.iloc[row,2:3]))
+	    testheadlines.append(' '.join(str(x) for x in test.iloc[row,2:x]))
 
 	trainheadlines = []
 	for row in range(0,len(train.index)):
 		#trainheadlines.append(' '.join(str(x) for x in train.iloc[row,2:27]))
-		trainheadlines.append(' '.join(str(x) for x in train.iloc[row,2:3]))
+		trainheadlines.append(' '.join(str(x) for x in train.iloc[row,2:x]))
 
 	cvtrain, cvtest, cvVector = countVectorize(trainheadlines,testheadlines)
 	return runKNN(cvtrain,cvtest, train,test)
@@ -55,9 +54,6 @@ def vectorize(train, test):
 
 data 	= 	pandas.read_csv("stocknews/Combined_News_DJIA.csv")
 data['Combined']=data.iloc[:,2:27].apply(lambda row: ''.join(str(row.values)), axis=1)
-data['Tomm_Label'] = data.Label.shift(-1)
-data = data[0:len(data)-1]
-
 	
 shuffledata = data.reindex(np.random.permutation(data.index))
 
@@ -85,24 +81,25 @@ train5 = n5.append(n2).append(n3).append(n4)
 test5 = n1
 
 
-print '1' 
-r1 = vectorize(train1, test1) 
-print '2'
-r2 = vectorize(train2, test2)
-print '3'
-r3 = vectorize(train3, test3) 
-print '4'
-r4 = vectorize(train4, test4) 
-print '5'
-r5 = vectorize(train5, test5) 
+for y in range(3,27):
+	#print '1' 
+	r1 = vectorize(train1, test1,y) 
+	#print '2'
+	r2 = vectorize(train2, test2,y)
+	#print '3'
+	r3 = vectorize(train3, test3,y) 
+	#print '4'
+	r4 = vectorize(train4, test4,y) 
+	#print '5'
+	r5 = vectorize(train5, test5,y) 
 
-best = 0
-bestI = 0
+	best = 0
+	bestI = 0
 
-for x in range(1,200):
-	sumR = r1[x] + r2[x] + r3[x] + r4[x] + r5[x]
-	if sumR > best:
-            best = sumR
-            bestI = x
- 
-print "KNN with neigh " + str(bestI) +  " gave the best accuracies of " + str(best/5)
+	for x in range(1,200):
+		sumR = r1[x] + r2[x] + r3[x] + r4[x] + r5[x]
+		if sumR > best:
+	            best = sumR
+	            bestI = x
+	 
+	print "KNN using Top "+str((y-2))+" with neigh " + str(bestI) +  " gave the best accuracies of " + str(best/5)

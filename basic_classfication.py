@@ -16,8 +16,8 @@ with warnings.catch_warnings():
 	from sklearn.lda 						import LDA
 	from sklearn.qda  						import QDA
 
-from nltk.stem.snowball import FrenchStemmer
-stemmer = FrenchStemmer()
+from nltk.stem.snowball import EnglishStemmer
+stemmer = EnglishStemmer()
 analyzer = CountVectorizer().build_analyzer()
 
 def stemmed_words(doc):
@@ -55,89 +55,89 @@ def tdIdfVectorize1(trainheadlines, testheadlines):
 	tdTest 			= td.transform(testheadlines)
 	return tdTrain, tdTest, td
 
-def runKNN(basictrain,basictest, train,test):
+def runKNN(basictrain,basictest, train,test, label):
 	maxAccuracy = 0
 	val = 0
 	print "Beginning KNN runs"
 	for x in range(1,300):
 		neigh = KNeighborsClassifier(n_neighbors=x)
-		neigh.fit(basictrain, train["Label"])
+		neigh.fit(basictrain, train[label])
 		predictions 	= neigh.predict(basictest)
-		matrix 			= pandas.crosstab(test["Label"], predictions, rownames=["Actual"], colnames=["Predicted"])
+		matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 
-		if accuracy_score(test["Label"], predictions) > maxAccuracy:
-			maxAccuracy = accuracy_score(test["Label"], predictions)
+		if accuracy_score(test[label], predictions) > maxAccuracy:
+			maxAccuracy = accuracy_score(test[label], predictions)
 			val = x
 	print "KNN of n = "+str(val),
 	print "gives an accuracy of " + str(maxAccuracy) 
 	return neigh
 
-def runLogisticReegresion(basictrain,basictest, train,test):
+def runLogisticReegresion(basictrain,basictest, train,test,label):
 	logModel 		= LogisticRegression()
-	logModel 		= logModel.fit(basictrain, train["Label"])
+	logModel 		= logModel.fit(basictrain, train[label])
 	predictions 	= logModel.predict(basictest)
-	matrix 			= pandas.crosstab(test["Label"], predictions, rownames=["Actual"], colnames=["Predicted"])
+	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 	print "Running Logistical Regression gives accuracy of ",
-	print accuracy_score(test["Label"], predictions)
+	print accuracy_score(test[label], predictions)
 	return logModel
 
-def runLinearSVC(basictrain,basictest, train,test):
+def runLinearSVC(basictrain,basictest, train,test,label):
 	clf = LinearSVC()
-	clf.fit(basictrain, train["Label"])
+	clf.fit(basictrain, train[label])
 	predictions = clf.predict(basictest)
-	matrix 			= pandas.crosstab(test["Label"], predictions, rownames=["Actual"], colnames=["Predicted"])
+	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 	print "Running LinearSVC gives accuracy of ",
-	print accuracy_score(test["Label"], predictions)
+	print accuracy_score(test[label], predictions)
 	return clf
 
-def runRandomForestClassifier(basictrain,basictest, train,test):
+def runRandomForestClassifier(basictrain,basictest, train,test,label):
 	rfc = RandomForestClassifier()
-	rfc.fit(basictrain, train["Label"])
+	rfc.fit(basictrain, train[label])
 	predictions 	= rfc.predict(basictest)
 	print "Running RandomForestClassifier gives accuracy of ",
-	print accuracy_score(test["Label"], predictions)
+	print accuracy_score(test[label], predictions)
 	return rfc
 
-def decisionTree(basictrain,basictest, train,test):
+def decisionTree(basictrain,basictest, train,test,label):
 	clf = DecisionTreeClassifier()
-	clf.fit(basictrain, train["Label"])
+	clf.fit(basictrain, train[label])
 	predictions = clf.predict(basictest)
-	matrix 			= pandas.crosstab(test["Label"], predictions, rownames=["Actual"], colnames=["Predicted"])
+	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 	print "Running Decision Tree gives accuracy of ",
-	print accuracy_score(test["Label"], predictions)
+	print accuracy_score(test[label], predictions)
 	return clf
 
-def runLDA(basictrain,basictest, train,test):
+def runLDA(basictrain,basictest, train,test,label):
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore")
 		clf = LDA()
-		clf.fit(basictrain, train["Label"])
+		clf.fit(basictrain, train[label])
 		predictions = clf.predict(basictest)
-		matrix 			= pandas.crosstab(test["Label"], predictions, rownames=["Actual"], colnames=["Predicted"])
+		matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 		print "Running LDA gives accuracy of ",
-		print accuracy_score(test["Label"], predictions)
+		print accuracy_score(test[label], predictions)
 		return clf
 
 
-def runQDA(basictrain,basictest, train,test):
+def runQDA(basictrain,basictest, train,test,label):
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore")
 		clf = QDA()
-		clf.fit(basictrain, train["Label"])
+		clf.fit(basictrain, train[label])
 		predictions = clf.predict(basictest)
-		matrix 			= pandas.crosstab(test["Label"], predictions, rownames=["Actual"], colnames=["Predicted"])
+		matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 		print "Running QDA gives accuracy of ",
-		print accuracy_score(test["Label"], predictions)
+		print accuracy_score(test[label], predictions)
 		return clf
 
 
-def addBoost(basictrain,basictest, train,test):
+def addBoost(basictrain,basictest, train,test,label):
 	clf = AdaBoostClassifier()
-	clf.fit(basictrain, train["Label"])
+	clf.fit(basictrain, train[label])
 	predictions = clf.predict(basictest)
-	matrix 			= pandas.crosstab(test["Label"], predictions, rownames=["Actual"], colnames=["Predicted"])
+	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 	print "Running Ada Boost gives accuracy of ",
-	print accuracy_score(test["Label"], predictions)
+	print accuracy_score(test[label], predictions)
 	return clf
 
 def CoefToHTML(basicvectorizer,basicmodel,filename):
@@ -158,6 +158,9 @@ data 	= 	pandas.read_csv("stocknews/Combined_News_DJIA.csv")
 #test = data[data['Date'] > '2014-12-31']
 
 data['Combined']=data.iloc[:,2:27].apply(lambda row: ''.join(str(row.values)), axis=1)
+data['Tomm_Label'] = data.Label.shift(-1)
+data = data[0:len(data)-1]
+
 train,test = train_test_split(data,test_size=0.2,random_state=42)
 
 '''train = pandas.DataFrame(columns = data.columns)
@@ -199,30 +202,41 @@ if not os.path.isfile("vectors.p"):
 				  "Count Vector with ngram of 2,2":[cvtrain1, cvtest1],
 				  "TD-IDF with ngram of 2,2":[tdTrain1,tdTest1]	
 				  }
-	pickle.dump(modelDict, open("vectors.p","wb"))
+	pickle.dump(vectorDict, open("vectors.p","wb"))
+
+	data = {
+				  "Test":test,
+				  "Train":train,
+				  
+				  }
+	pickle.dump(data, open("data.p","wb"))
+
 	print 'Saving to pickle'
 else:
 	vectorDict = pickle.load( open( "vectors.p", "rb" ))
 
-for key,value in vectorDict.iteritems():
-	print 'Running with ' + str(key)
-	runKNN(value[0],value[1],train,test)
-	runLogisticReegresion(value[0],value[1],train,test)
-	runLinearSVC(value[0],value[1],train,test)
-	runRandomForestClassifier(value[0],value[1],train,test)
-	decisionTree(value[0],value[1],train,test)
-	if key != 'Count Vector with ngram of 2,2':
-		runLDA(value[0].toarray(),value[1].toarray(),train,test)
-		runQDA(value[0].toarray(),value[1].toarray(),train,test)
-	#gaussianNB(value[0],value[1],train,test)
-	addBoost(value[0],value[1],train,test)
-	print "\n"
-	
+def run(label):
+	for key,value in vectorDict.iteritems():
+		print 'Running with ' + str(key)
+		runKNN(value[0],value[1],train,test, label)
+		runLogisticReegresion(value[0],value[1],train,test,label)
+		runLinearSVC(value[0],value[1],train,test,label)
+		runRandomForestClassifier(value[0],value[1],train,test,label)
+		decisionTree(value[0],value[1],train,test,label)
+		if key != 'Count Vector with ngram of 2,2':
+			runLDA(value[0].toarray(),value[1].toarray(),train,test,label)
+			runQDA(value[0].toarray(),value[1].toarray(),train,test,label)
+		#gaussianNB(value[0],value[1],train,test)
+		addBoost(value[0],value[1],train,test,label)
+		print "\n"
+
+
+run("Label")	
 '''
 
 #CoefToHTML(cvVector,logCV,"log-countVector")
 #CoefToHTML(tdVector,svmidf,"SVM-IDF")
-#matrix 			= pandas.crosstab(test["Label"], predictions, rownames=["Actual"], colnames=["Predicted"])
+#matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 
 
 
