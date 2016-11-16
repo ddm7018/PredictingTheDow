@@ -23,3 +23,8 @@ full['Tomm_Label'] = full.Label.shift(-1)
 full.to_csv("stocknews/full-table.csv")
 
 
+import matplotlib.pyplot as plt
+plt.scatter(full[[ "Sentiment1"]], full['SentimentAll'], c = full['Label'])
+plt.show()
+
+

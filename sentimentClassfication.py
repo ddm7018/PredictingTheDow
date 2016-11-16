@@ -21,34 +21,44 @@ train_y = train['Label']
 test_x = test[[ "Sentiment1"]]
 test_y = test['Label']
 '''
+
+
 clf = DecisionTreeClassifier()
 scores = cross_val_score(clf, data[[ "Sentiment1"]], data['Label'], cv=5)
 print scores.mean()
 
-neigh = KNeighborsClassifier(n_neighbors=3)
-scores = cross_val_score(neigh, data[["Sentiment1"]], data['Label'], cv=5)
-print scores.mean()
+bestN = 0
+bestVal = 0
+'''
+for i in range(1,200):
+	neigh = KNeighborsClassifier(n_neighbors=i)
+	scores = cross_val_score(neigh, data[["Sentiment1"]], data['Label'], cv=5)
+	scores.mean()
+	if scores.mean() > bestVal:
+		bestN = i
+		bestVal = scores.mean()
+
+print bestN, bestVal
+'''
 
 clf1 = LinearSVC()
-
 scores = cross_val_score(clf1, data[[ "Sentiment1"]], data['Label'], cv=5)
 print scores.mean()
 
-clf = RandomForestClassifier()
-scores = cross_val_score(clf, data[[ "Sentiment1"]], data['Label'], cv=5)
-print scores.mean()
+bestN= 0
+bestVal = 0
 
+'''
+for i in range(100,130):
+	clf = RandomForestClassifier(n_estimators = i)
+	scores = cross_val_score(clf, data[[ "Sentiment1"]], data['Label'], cv=5)
+	if scores.mean() > bestVal:
+		bestN = i
+		bestVal = scores.mean()
+
+print bestN, bestVal
 '''
 
 
-clf = DecisionTreeClassifier()
-clf = clf.fit(train_x, train_y)
-predictions =  clf.predict(test_x)
-print accuracy_score(test_y, predictions)
 
-neigh = KNeighborsClassifier(n_neighbors=3)
-neigh.fit(train_x,train_y)
-predictions1 	= neigh.predict(test_x)
-print accuracy_score(test_y, predictions1)
-#features = list(df2.columns[])
-'''
+
