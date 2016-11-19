@@ -5,10 +5,10 @@ import pickle, os
 import numpy as np
 from sklearn.feature_extraction.text 	import CountVectorizer
 import multiprocessing
-from nltk.stem.porter import PorterStemmer
+from nltk.stem.snowball import EnglishStemmer
 from multiprocessing import Manager
 
-stemmer = PorterStemmer()
+stemmer = EnglishStemmer()
 analyzer = CountVectorizer().build_analyzer()
 
 def stemmed_words(doc):
@@ -27,7 +27,7 @@ def runKNN(basictrain,basictest, train,test, ):
 	maxAccuracy = 0
 	val = 0
 	print "Beginning KNN runs"
-	for x in range(100,300):
+	for x in range(1,300):
 		neigh = KNeighborsClassifier(n_neighbors=x)
 		neigh.fit(basictrain, train["Label"])
 		predictions 	= neigh.predict(basictest)
@@ -43,12 +43,12 @@ def vectorize(train, test,num, return_dict):
 	trainheadlines = []
 	for row in range(0,len(test.index)):
 	    #testheadlines.append(' '.join(str(x) for x in test.iloc[row,2:27]))
-	    testheadlines.append(' '.join(str(x) for x in test.iloc[row,2:3]))
+	    testheadlines.append(' '.join(str(x) for x in test.iloc[row,2:27]))
 
 	trainheadlines = []
 	for row in range(0,len(train.index)):
 		#trainheadlines.append(' '.join(str(x) for x in train.iloc[row,2:27]))
-		trainheadlines.append(' '.join(str(x) for x in train.iloc[row,2:3]))
+		trainheadlines.append(' '.join(str(x) for x in train.iloc[row,2:27]))
 
 	cvtrain, cvtest, cvVector = countVectorize(trainheadlines,testheadlines)
 	return_dict[num] = runKNN(cvtrain,cvtest, train,test)

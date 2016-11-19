@@ -24,7 +24,7 @@ test_y = test['Label']
 
 
 clf = DecisionTreeClassifier()
-scores = cross_val_score(clf, data[[ "Sentiment1"]], data['Label'], cv=5)
+scores = cross_val_score(clf, data[[ "Label","Sentiment1"]], data['Tomm_Label'], cv=5)
 print scores.mean()
 
 bestN = 0
@@ -41,8 +41,11 @@ for i in range(1,200):
 print bestN, bestVal
 '''
 
+
+
+
 clf1 = LinearSVC()
-scores = cross_val_score(clf1, data[[ "Sentiment1"]], data['Label'], cv=5)
+scores = cross_val_score(clf1, data[[ "Label","Sentiment1"]], data['Tomm_Label'], cv=5)
 print scores.mean()
 
 bestN= 0

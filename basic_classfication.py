@@ -26,23 +26,21 @@ def stemmed_words(doc):
 
 def countVectorize(trainheadlines, testheadlines):
 	
-	basicvectorizer = CountVectorizer(stop_words='english', ngram_range=(1,1),analyzer=stemmed_words)
-	#basicvectorizer = CountVectorizer()
+	basicvectorizer = CountVectorizer(stop_words='english',  min_df = 5 ,ngram_range=(1,1),analyzer=stemmed_words)
 	basictrain 		= basicvectorizer.fit_transform(trainheadlines)
 	basictest 		= basicvectorizer.transform(testheadlines)
 	return basictrain, basictest, basicvectorizer
 
 def tdIdfVectorize(trainheadlines, testheadlines):
 	#td 				= TfidfVectorizer()
-	td 				= TfidfVectorizer(stop_words='english',max_df=0.95, min_df=2,
-                                max_features=2000, ngram_range=(1,1),analyzer=stemmed_words)
+	td 				= TfidfVectorizer(stop_words='english',max_df=0.95, min_df=1, ngram_range=(1,1),analyzer=stemmed_words)
 	tdTrain 		= td.fit_transform(trainheadlines)
 	tdTest 			= td.transform(testheadlines)
 	return tdTrain, tdTest, td
 
 
 def countVectorize1(trainheadlines, testheadlines):
-	basicvectorizer = CountVectorizer(stop_words='english', ngram_range=(2,2))
+	basicvectorizer = CountVectorizer(stop_words='english', ngram_range=(2,2), analyzer =stemmed_words)
 	#basicvectorizer = CountVectorizer()
 	basictrain 		= basicvectorizer.fit_transform(trainheadlines)
 	basictest 		= basicvectorizer.transform(testheadlines)
@@ -51,12 +49,12 @@ def countVectorize1(trainheadlines, testheadlines):
 def tdIdfVectorize1(trainheadlines, testheadlines):
 	#td 				= TfidfVectorizer()
 	td 				= TfidfVectorizer(stop_words='english',max_df=0.95, min_df=2,
-                                max_features=2000, ngram_range=(2,2))
+                                max_features=2000, ngram_range=(2,2), analyzer = stemmed_words)
 	tdTrain 		= td.fit_transform(trainheadlines)
 	tdTest 			= td.transform(testheadlines)
 	return tdTrain, tdTest, td
 
-def runKNN(basictrain,basictest, train,test, label):
+def runKNN(basictrain,basictest, train,test, label, key):
 	maxAccuracy = 0
 	val = 0
 	#print "Beginning KNN runs"
@@ -70,45 +68,50 @@ def runKNN(basictrain,basictest, train,test, label):
 			maxAccuracy = accuracy_score(test[label], predictions)
 			val = x
 	print "KNN of n = "+str(val),
-	print "gives an accuracy of \t\t  " + str(maxAccuracy) 
+	print "gives an accuracy of \t\t  " + str(maxAccuracy) ,
+	print "\t" + str(key)
 	return neigh
 
-def runLogisticReegresion(basictrain,basictest, train,test,label):
+def runLogisticReegresion(basictrain,basictest, train,test,label,key):
 	logModel 		= LogisticRegression()
 	logModel 		= logModel.fit(basictrain, train[label])
 	predictions 	= logModel.predict(basictest)
 	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 	print "Running Logistical Regression gives accuracy of  ",
-	print accuracy_score(test[label], predictions)
+	print accuracy_score(test[label], predictions),
+	print "\t" + str(key)
 	return logModel
 
-def runLinearSVC(basictrain,basictest, train,test,label):
+def runLinearSVC(basictrain,basictest, train,test,label,key):
 	clf = LinearSVC()
 	clf.fit(basictrain, train[label])
 	predictions = clf.predict(basictest)
 	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 	print "Running LinearSVC gives accuracy of\t\t ",
-	print accuracy_score(test[label], predictions)
+	print accuracy_score(test[label], predictions) ,
+	print "\t" + str(key)
 	return clf
 
-def runRandomForestClassifier(basictrain,basictest, train,test,label):
+def runRandomForestClassifier(basictrain,basictest, train,test,label,key):
 	rfc = RandomForestClassifier()
 	rfc.fit(basictrain, train[label])
 	predictions 	= rfc.predict(basictest)
 	print "Running RandomForestClassifier gives accuracy of ",
-	print accuracy_score(test[label], predictions)
+	print accuracy_score(test[label], predictions),
+	print "\t" + str(key)
 	return rfc
 
-def decisionTree(basictrain,basictest, train,test,label):
+def decisionTree(basictrain,basictest, train,test,label,key):
 	clf = DecisionTreeClassifier()
 	clf.fit(basictrain, train[label])
 	predictions = clf.predict(basictest)
 	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 	print "Running Decision Tree gives accuracy of    \t ",
-	print accuracy_score(test[label], predictions)
+	print accuracy_score(test[label], predictions) ,
+	print "\t" + str(key)
 	return clf
 
-def runLDA(basictrain,basictest, train,test,label):
+def runLDA(basictrain,basictest, train,test,label, key):
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore")
 		clf = LDA()
@@ -116,11 +119,12 @@ def runLDA(basictrain,basictest, train,test,label):
 		predictions = clf.predict(basictest)
 		matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 		print "Running LDA gives accuracy of ",
-		print accuracy_score(test[label], predictions)
+		print accuracy_score(test[label], predictions) ,
+		print "\t" + str(key)
 		return clf
 
 
-def runQDA(basictrain,basictest, train,test,label):
+def runQDA(basictrain,basictest, train,test,label,key):
 	with warnings.catch_warnings():
 		warnings.simplefilter("ignore")
 		clf = QDA()
@@ -128,17 +132,19 @@ def runQDA(basictrain,basictest, train,test,label):
 		predictions = clf.predict(basictest)
 		matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 		print "Running QDA gives accuracy of ",
-		print accuracy_score(test[label], predictions)
+		print accuracy_score(test[label], predictions),
+		print "\t" + str(key)
 		return clf
 
 
-def addBoost(basictrain,basictest, train,test,label):
+def addBoost(basictrain,basictest, train,test,label,key):
 	clf = AdaBoostClassifier()
 	clf.fit(basictrain, train[label])
 	predictions = clf.predict(basictest)
 	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
 	print "Running Ada Boost gives accuracy of \t\t ",
-	print accuracy_score(test[label], predictions)
+	print accuracy_score(test[label], predictions),
+	print "\t" + str(key)
 	return clf
 
 def CoefToHTML(basicvectorizer,basicmodel,filename):
@@ -162,20 +168,7 @@ data['Combined']=data.iloc[:,2:27].apply(lambda row: ''.join(str(row.values)), a
 data['Tomm_Label'] = data.Label.shift(-1)
 data = data[0:len(data)-1]
 
-train,test = train_test_split(data,test_size=0.2,random_state=42)
-
-'''train = pandas.DataFrame(columns = data.columns)
-test  = pandas.DataFrame(columns = data.columns)
-
-import random 
-for row in range(0,len(data)):
-	if random.random() < .8:
-		train = train.append(data.iloc[row]) 
-	else:
-		test = test.append(data.iloc[row]) 
-
-'''
-
+train,test 		= train_test_split(data,test_size=0.2,random_state=42)
 testheadlines 	= []
 
 for row in range(0,len(test.index)):
@@ -188,7 +181,7 @@ for row in range(0,len(train.index)):
 	trainheadlines.append(' '.join(str(x) for x in train.iloc[row,2:27]))
 
 vectorDict = {}
-if not os.path.isfile("vectors.p"):
+if not os.path.isfile("pickle/vectors.p"):
 	print "Starting Vectorizing"
 	cvtrain, cvtest, cvVector = countVectorize(trainheadlines,testheadlines)
 	tdTrain, tdTest, tdVector = tdIdfVectorize(trainheadlines,testheadlines)
@@ -203,59 +196,59 @@ if not os.path.isfile("vectors.p"):
 				  "Count Vector with ngram of 2,2":[cvtrain1, cvtest1],
 				  "TD-IDF with ngram of 2,2":[tdTrain1,tdTest1]	
 				  }
-	pickle.dump(vectorDict, open("vectors.p","wb"))
+	pickle.dump(vectorDict, open("pickle/vectors.p","wb"))
 
 	data = {
 				  "Test":test,
 				  "Train":train,
 				  
 				  }
-	pickle.dump(data, open("data.p","wb"))
+	pickle.dump(data, open("pickle/data.p","wb"))
 
 	print 'Saving to pickle'
 else:
-	vectorDict = pickle.load( open( "vectors.p", "rb" ))
+	vectorDict = pickle.load( open( "pickle/vectors.p", "rb" ))
 
-label = 'Label'
+label = 'Tomm_Label'
 jobs = []
 manager = Manager()
 return_dict = manager.dict()
 
 for key,value in vectorDict.iteritems():
 	#print 'Running with ' + str(key)
-	p = multiprocessing.Process(target=runKNN, args=(value[0],value[1],train,test, label,))
+	p = multiprocessing.Process(target=runKNN, args=(value[0],value[1],train,test, label,key,))
 	jobs.append(p)
 	p.start()
 
 
-	p = multiprocessing.Process(target=runLogisticReegresion, args=(value[0],value[1],train,test, label,))
+	p = multiprocessing.Process(target=runLogisticReegresion, args=(value[0],value[1],train,test, label,key,))
 	jobs.append(p)
 	p.start()
 
-	p = multiprocessing.Process(target=runLinearSVC, args=(value[0],value[1],train,test, label,))
+	p = multiprocessing.Process(target=runLinearSVC, args=(value[0],value[1],train,test, label,key,))
 	jobs.append(p)
 	p.start()
 
-	p = multiprocessing.Process(target=runRandomForestClassifier, args=(value[0],value[1],train,test, label,))
+	p = multiprocessing.Process(target=runRandomForestClassifier, args=(value[0],value[1],train,test, label,key,))
 	jobs.append(p)
 	p.start()
 
-	p = multiprocessing.Process(target=decisionTree, args=(value[0],value[1],train,test, label,))
+	p = multiprocessing.Process(target=decisionTree, args=(value[0],value[1],train,test, label,key,))
 	jobs.append(p)
 	p.start()
 
 
 	if key != 'Count Vector with ngram of 2,2':
 	
-		p = multiprocessing.Process(target=runLDA, args=(value[0].toarray(),value[1].toarray(),train,test, label,))
+		p = multiprocessing.Process(target=runLDA, args=(value[0].toarray(),value[1].toarray(),train,test, label,key,))
 		jobs.append(p)
 		p.start()
 
-		p = multiprocessing.Process(target=runQDA, args=(value[0].toarray(),value[1].toarray(),train,test, label,))
+		p = multiprocessing.Process(target=runQDA, args=(value[0].toarray(),value[1].toarray(),train,test, label,key,))
 		jobs.append(p)
 		p.start()
 
-	p = multiprocessing.Process(target=addBoost, args=(value[0],value[1],train,test, label,))
+	p = multiprocessing.Process(target=addBoost, args=(value[0],value[1],train,test, label,key,))
 	jobs.append(p)
 	p.start()
 

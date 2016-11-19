@@ -47,7 +47,7 @@ for each in down['Combined']:
 
 d = path.dirname(__file__)	
 	
-bear_mask = np.array(Image.open(path.join(d,  "E:/RIT/S3Fall2016/KDD/Project/-PredictingTheDow-master/-PredictingTheDow-master/bear.jpg")))
+bear_mask = np.array(Image.open(path.join(d,  "bear.jpg")))
 
 down_wordCloud = WordCloud(background_color='black',
                       mask = bear_mask
@@ -59,7 +59,7 @@ pl.axis('off')
 pl.show()
 
 
-bull_mask = np.array(Image.open(path.join(d,  "E:/RIT/S3Fall2016/KDD/Project/-PredictingTheDow-master/-PredictingTheDow-master/bull.jpg")))
+bull_mask = np.array(Image.open(path.join(d,  "bull.jpg")))
 
 
 upOrSame_wordCloud = WordCloud(background_color='black',
