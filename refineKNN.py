@@ -1,58 +1,64 @@
 import pandas
 from sklearn.neighbors 					import KNeighborsClassifier
 from sklearn.metrics					import accuracy_score
-import pickle, os
+import pickle, os, re
 import numpy as np
-from sklearn.feature_extraction.text 	import CountVectorizer
+from sklearn.feature_extraction.text 	import CountVectorizer, TfidfVectorizer
 import multiprocessing
 from nltk.stem.snowball import EnglishStemmer
 from multiprocessing import Manager
+from nltk.corpus 				import stopwords
+from sklearn.metrics 		import roc_curve, auc
 
 stemmer = EnglishStemmer()
 analyzer = CountVectorizer().build_analyzer()
+
+def to_words(content):
+    letters_only = re.sub("[^a-zA-Z]", " ", content) 
+    words = letters_only.lower().split()                             
+    stops = set(stopwords.words("english"))                  
+    meaningful_words = [w for w in words if not w in stops] 
+    return( " ".join( meaningful_words ))
+
+
 
 def stemmed_words(doc):
     return (stemmer.stem(w) for w in analyzer(doc))
 
 def countVectorize(trainheadlines,testheadlines):
 	
-	basicvectorizer = CountVectorizer(stop_words='english', ngram_range=(1,1),analyzer=stemmed_words)
+	basicvectorizer = TfidfVectorizer()
 	basictrain 		= basicvectorizer.fit_transform(trainheadlines)
 	basictest 		= basicvectorizer.transform(testheadlines)
 	return basictrain, basictest, basicvectorizer
 
 
 def runKNN(basictrain,basictest, train,test, ):
+	label = 'Label'
 	knnDict = {}
 	maxAccuracy = 0
 	val = 0
 	print "Beginning KNN runs"
 	for x in range(1,300):
 		neigh = KNeighborsClassifier(n_neighbors=x)
-		neigh.fit(basictrain, train["Label"])
+		neigh.fit(basictrain, train[label])
 		predictions 	= neigh.predict(basictest)
-		matrix 			= pandas.crosstab(test["Label"], predictions, rownames=["Actual"], colnames=["Predicted"])
-		knnDict[x] 		= accuracy_score(test["Label"], predictions) 
+		matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
+		
+		prob = neigh.predict_proba(basictest)[:,1]
+		fpr, tpr, _ = roc_curve(test[label],prob)
+		knnDict[x] 		= [auc(tpr,fpr), accuracy_score(test["Label"], predictions) ]
 
 	return knnDict
 	
 
 def vectorize(train, test,num, return_dict):
-
 	testheadlines = []
 	trainheadlines = []
-	for row in range(0,len(test.index)):
-	    #testheadlines.append(' '.join(str(x) for x in test.iloc[row,2:27]))
-	    testheadlines.append(' '.join(str(x) for x in test.iloc[row,2:27]))
-
-	trainheadlines = []
-	for row in range(0,len(train.index)):
-		#trainheadlines.append(' '.join(str(x) for x in train.iloc[row,2:27]))
-		trainheadlines.append(' '.join(str(x) for x in train.iloc[row,2:27]))
-
+	for each in test['Combined']: testheadlines.append(to_words(each))
+	for each in train['Combined']: trainheadlines.append(to_words(each))
 	cvtrain, cvtest, cvVector = countVectorize(trainheadlines,testheadlines)
 	return_dict[num] = runKNN(cvtrain,cvtest, train,test)
-	#return runKNN(cvtrain,cvtest, train,test)
 
 
 data 	= 	pandas.read_csv("stocknews/Combined_News_DJIA.csv")
@@ -121,15 +127,16 @@ for proc in jobs:
 
 best = 0
 bestI = 0
+bestA = 0
 
-for x in range(100,300):
+
+for x in range(1,500):
 	#sumR = r1[x] + r2[x] + r3[x] + r4[x] + r5[x]
-	sumR = return_dict.values()[0][x] + return_dict.values()[1][x] + return_dict.values()[2][x] + return_dict.values()[3][x] +return_dict.values()[4][x]
-
-
+	sumR = return_dict.values()[0][x][0] + return_dict.values()[1][x][0] + return_dict.values()[2][x][0] + return_dict.values()[3][x][0] +return_dict.values()[4][x][0]
+	sumA = return_dict.values()[0][x][1] + return_dict.values()[1][x][1] + return_dict.values()[2][x][1] + return_dict.values()[3][x][1] +return_dict.values()[4][x][1]
 	if sumR > best:
             best = sumR
             bestI = x
+            bestA = sumA/float(5)
  
-print "KNN with neigh " + str(bestI) +  " gave the best accuracies of " + str(best/5)
-
+print "KNN with neigh " + str(bestI) +  "had the best AUC  of " + str(best/5) + "an accuracy of " + str(bestA)
