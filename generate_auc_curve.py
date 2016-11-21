@@ -8,12 +8,10 @@ from sklearn.linear_model 	import LogisticRegression
 from sklearn.neighbors 		import KNeighborsClassifier
 from sklearn.svm 			import SVC
 from sklearn.tree 			import DecisionTreeClassifier
-
 from sklearn.naive_bayes 	import GaussianNB
 from sklearn.metrics 		import accuracy_score
 from sklearn.metrics 		import roc_curve, auc
 from ggplot 				import *
-from nltk.stem.porter 		import PorterStemmer
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
 stemmer = PorterStemmer()
 analyzer = CountVectorizer().build_analyzer()
