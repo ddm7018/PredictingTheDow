@@ -55,3 +55,5 @@ This file runs k-fold validation and reports the optimal number of neighbors.
 
 ## Accuarcies
 The screenshots of refineKNN.py and basic_classfication.py are include the screenshot folder
+
+updated 11/24
