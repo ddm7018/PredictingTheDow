@@ -30,9 +30,9 @@ def to_words(content):
 
 
 Vectorizers = [
-#CountVectorizer(),
-#CountVectorizer(ngram_range=(2,2)),
-#TfidfVectorizer(),
+CountVectorizer(),
+CountVectorizer(ngram_range=(2,2)),
+TfidfVectorizer(),
 TfidfVectorizer(ngram_range=(2,2))
 ]
 
@@ -40,17 +40,13 @@ TfidfVectorizer(ngram_range=(2,2))
 
 Classifiers = [
 
-KNeighborsClassifier(n_neighbors=20),
-KNeighborsClassifier(n_neighbors=30),
-#KNeighborsClassifier(n_neighbors=10),
-#AdaBoostClassifier(),
-#DecisionTreeClassifier(),
-#RandomForestClassifier(),
-#LogisticRegression(),
-#SVC(kernel="rbf", C=0.025,probability=True),
+KNeighborsClassifier(n_neighbors=200),
+AdaBoostClassifier(),
+DecisionTreeClassifier(),
+RandomForestClassifier(),
+LogisticRegression(),
+SVC(kernel="rbf", C=0.025,probability=True),
 #ExtraTreesClassifier()
-#LDA(),
-#QDA(),
 ]
 
 

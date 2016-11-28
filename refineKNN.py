@@ -38,7 +38,7 @@ def runKNN(basictrain,basictest, train,test, ):
 	knnDict = {}
 	maxAccuracy = 0
 	val = 0
-	print "Beginning KNN runs"
+	#print "Beginning KNN runs"
 	for x in range(1,300):
 		neigh = KNeighborsClassifier(n_neighbors=x)
 		neigh.fit(basictrain, train[label])
@@ -93,8 +93,6 @@ train5 = n5.append(n2).append(n3).append(n4)
 test5 = n1
 
 
-print 'here'
-
 jobs = []
 manager = Manager()
 return_dict = manager.dict()
@@ -130,13 +128,13 @@ bestI = 0
 bestA = 0
 
 
-for x in range(1,500):
+for x in range(1,300):
 	#sumR = r1[x] + r2[x] + r3[x] + r4[x] + r5[x]
 	sumR = return_dict.values()[0][x][0] + return_dict.values()[1][x][0] + return_dict.values()[2][x][0] + return_dict.values()[3][x][0] +return_dict.values()[4][x][0]
 	sumA = return_dict.values()[0][x][1] + return_dict.values()[1][x][1] + return_dict.values()[2][x][1] + return_dict.values()[3][x][1] +return_dict.values()[4][x][1]
-	if sumR > best:
+	if sumA > best:
             best = sumR
             bestI = x
             bestA = sumA/float(5)
  
-print "KNN with neigh " + str(bestI) +  "had the best AUC  of " + str(best/5) + "an accuracy of " + str(bestA)
+print "KNN using TfidfVectorizer with neigh " + str(bestI) +  " had the best AUC  of " + str(best/5) + "an accuracy of " + str(bestA)
