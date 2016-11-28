@@ -30,9 +30,9 @@ def to_words(content):
 
 
 Vectorizers = [
-CountVectorizer(),
-CountVectorizer(ngram_range=(2,2)),
-TfidfVectorizer(),
+#CountVectorizer(),
+#CountVectorizer(ngram_range=(2,2)),
+#TfidfVectorizer(),
 TfidfVectorizer(ngram_range=(2,2))
 ]
 
@@ -40,13 +40,15 @@ TfidfVectorizer(ngram_range=(2,2))
 
 Classifiers = [
 
-KNeighborsClassifier(n_neighbors=200),
-AdaBoostClassifier(),
-DecisionTreeClassifier(),
-RandomForestClassifier(),
-LogisticRegression(),
-SVC(kernel="rbf", C=0.025,probability=True),
-ExtraTreesClassifier()
+KNeighborsClassifier(n_neighbors=20),
+KNeighborsClassifier(n_neighbors=30),
+#KNeighborsClassifier(n_neighbors=10),
+#AdaBoostClassifier(),
+#DecisionTreeClassifier(),
+#RandomForestClassifier(),
+#LogisticRegression(),
+#SVC(kernel="rbf", C=0.025,probability=True),
+#ExtraTreesClassifier()
 #LDA(),
 #QDA(),
 ]
@@ -65,7 +67,12 @@ data['Combined']=data.iloc[:,9:33].apply(lambda row: ''.join(str(row.values)), a
 data['Tomm_Label'] = data.Label.shift(-1)
 data = data[0:len(data)-1]
 
-train,test 		= train_test_split(data,test_size=0.2,random_state=42)
+#train,test 		= train_test_split(data,test_size=0.2,random_state=42)
+
+### Dividing the data into test and train by dates (as specified)
+train = data[data['Date'] < '2015-01-01']
+test = data[data['Date'] > '2014-12-31']
+
 testheadlines 	= []
 
 for each in test['Combined']:
@@ -124,14 +131,17 @@ def runModel(trainLines,testLines,train,test, label,key):
 		print " --- ",
 		print "\t" + str(key) + " --- ",
 		print "\t" + str(clf.__class__.__name__)
+		return predictions
 
 
+predDict = {}
 for key,value in vectorDict.iteritems():
 	for clf in Classifiers:
-		p = multiprocessing.Process(target=runModel, args=(value[0],value[1],train,test, label,key,))
-		jobs.append(p)
-		p.start()
-		p.join()
-
-
-		
+		#p = multiprocessing.Process(target=runModel, args=(value[0],value[1],train,test, label,key,))
+		#jobs.append(p)
+		#p.start()
+		#p.join()
+		pred = runModel(value[0],value[1],train,test, label,key)
+		names = str(clf.__class__.__name__) + " " + str(clf.n_neighbors)
+		predDict[names] = pred
+pickle.dump(predDict, open("pickle/prediction.p","wb"))

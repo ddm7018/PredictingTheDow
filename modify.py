@@ -88,6 +88,7 @@ full['NewLabel'] = full['Diff'].apply(diffLabel)
 
 full['100Label'] = full.Diff > 100 
 full['100Label'] = full['100Label'].astype(int)
+'''
 full.to_csv("stocknews/full-table.csv")
 plt.scatter(full[[ "Sentiment1"]], full['SentimentAll'], c = full['Label'])
 plt.savefig("distribution/scatter.png")
@@ -96,9 +97,11 @@ plt.savefig("distribution/scatter1.png")
 plt.scatter(full[[ "SentimentAll"]], full['Diff'], c = full['Label'])
 plt.savefig("distribution/scatter2.png")
 
+
+
 greaterDistrubtion(full)
 classDistrubtion(combined)
-
+'''
 
 
 
