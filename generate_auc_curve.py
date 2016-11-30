@@ -106,11 +106,11 @@ print count/float(len(decrease_list))
 '''
 
 Classifiers = [
-    KNeighborsClassifier(n_neighbors=1),
+    KNeighborsClassifier(n_neighbors=50),
     #SVC(kernel="rbf", C=0.025,probability=True),
-    #AdaBoostClassifier(ExtraTreesClassifier()),
-    #DecisionTreeClassifier(),
-    #ExtraTreesClassifier(),
+    AdaBoostClassifier(ExtraTreesClassifier()),
+    DecisionTreeClassifier(),
+    ExtraTreesClassifier(),
    	]
 
 predDict = {}
@@ -140,9 +140,9 @@ for clf in Classifiers:
 	tmp = pd.DataFrame(dict(fpr=fpr, tpr=tpr))
  	g = ggplot(tmp, aes(x='fpr', y='tpr')) +geom_line() +geom_abline(linetype='dashed')+ ggtitle('Roc Curve of '+clf.__class__.__name__ + " Accuracy("+str(round(accuracy[0],4))+") with AUC of "+ str(round(auc(fpr,tpr),4)))
  	filename = str("AUC/")+str(clf.__class__.__name__)+".png"
- 	#g.save(filename)
- 	#predDict[str(clf.__class__.__name__)] = predictions
-#pickle.dump(predDict, open("pickle/prediction.p","wb"))
+ 	g.save(filename)
+ 	predDict[str(clf.__class__.__name__)] = predictions
+pickle.dump(predDict, open("pickle/prediction.p","wb"))
 
     #print(g)
 

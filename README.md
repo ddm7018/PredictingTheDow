@@ -29,14 +29,15 @@ python basic_classifcation.py
 ```
 
 This runs 
-- KNN n = 200
-- Logistic Regression
-- LinearSVC
+- KNN n = 5
+- AdaBoost
+- DecisionTree
 - RandomForest
-- Decision Tree
-- QDA
-- LDA
-- Ada Boost
+- LogisticRegression
+- SVC
+- ExtraTrees
+- BernoulliNB
+
 
 against four different kinds of vectors
 - Count Vector
@@ -59,18 +60,28 @@ python refineKNN.py
 ```
 This file runs k-fold validation and reports the optimal for either accuracy or AUC number of neighbors. Accuracies and AUC all reported as well
 
+
+## AUC 
+```
+python generate_auc_curves.py
+```
+
+Generated AUC curves using CountVectorizer(ngram_range = (1,2), min_df = 2), models were   
+	- KNeighborsClassifier(n_neighbors=50)
+    - AdaBoostClassifier(ExtraTreesClassifier
+    - DecisionTreeClassifier
+    - ExtraTreesClassifier
+Test-Train split was before and after Jan 1, 2015
+
+
 ## Backtesting
 ```
 python othermodels.py
 ```
-Backtest KNN of n=20, CountVector against LogisticRegression with Lags. Results are saved to .png file
+Backtest models saved from generatue auc against LogisticRegression with Lags. Results are saved to backtest.png file
 
-
-
-Run KNN of n= 20 using the test, train split from Kaggle, against Logistic Regression Model comprised of Lags. Backtest the models 
-and saved the results of the backtest as backtesting.png
 
 ## Accuarcies
 The screenshots of refineKNN.py and basic_classfication.py are include the screenshot folder
 
-updated 11/28
+updated 11/29
