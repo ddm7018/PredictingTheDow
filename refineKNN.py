@@ -27,7 +27,7 @@ def stemmed_words(doc):
 
 def countVectorize(trainheadlines,testheadlines):
 	
-	basicvectorizer = TfidfVectorizer()
+	basicvectorizer = CountVectorizer(min_df = 5)
 	basictrain 		= basicvectorizer.fit_transform(trainheadlines)
 	basictest 		= basicvectorizer.transform(testheadlines)
 	return basictrain, basictest, basicvectorizer
@@ -39,7 +39,7 @@ def runKNN(basictrain,basictest, train,test, ):
 	maxAccuracy = 0
 	val = 0
 	#print "Beginning KNN runs"
-	for x in range(1,300):
+	for x in range(1,500):
 		neigh = KNeighborsClassifier(n_neighbors=x)
 		neigh.fit(basictrain, train[label])
 		predictions 	= neigh.predict(basictest)
@@ -47,7 +47,7 @@ def runKNN(basictrain,basictest, train,test, ):
 		
 		prob = neigh.predict_proba(basictest)[:,1]
 		fpr, tpr, _ = roc_curve(test[label],prob)
-		knnDict[x] 		= [auc(tpr,fpr), accuracy_score(test["Label"], predictions) ]
+		knnDict[x] 		= [auc(fpr,tpr), accuracy_score(test["Label"], predictions) ]
 
 	return knnDict
 	
@@ -62,7 +62,7 @@ def vectorize(train, test,num, return_dict):
 
 
 data 	= 	pandas.read_csv("stocknews/Combined_News_DJIA.csv")
-data['Combined']=data.iloc[:,2:27].apply(lambda row: ''.join(str(row.values)), axis=1)
+data['Combined']=data.iloc[:,2:28].apply(lambda row: ''.join(str(row.values)), axis=1)
 data['Tomm_Label'] = data.Label.shift(-1)
 data = data[0:len(data)-1]
 
@@ -128,13 +128,16 @@ bestI = 0
 bestA = 0
 
 
-for x in range(1,300):
+for x in range(1,500):
 	#sumR = r1[x] + r2[x] + r3[x] + r4[x] + r5[x]
-	sumR = return_dict.values()[0][x][0] + return_dict.values()[1][x][0] + return_dict.values()[2][x][0] + return_dict.values()[3][x][0] +return_dict.values()[4][x][0]
-	sumA = return_dict.values()[0][x][1] + return_dict.values()[1][x][1] + return_dict.values()[2][x][1] + return_dict.values()[3][x][1] +return_dict.values()[4][x][1]
-	if sumA > best:
-            best = sumR
+	sumAUC = return_dict.values()[0][x][0] + return_dict.values()[1][x][0] + return_dict.values()[2][x][0] + return_dict.values()[3][x][0] +return_dict.values()[4][x][0]
+	sumAccuracy = return_dict.values()[0][x][1] + return_dict.values()[1][x][1] + return_dict.values()[2][x][1] + return_dict.values()[3][x][1] +return_dict.values()[4][x][1]
+	#print (sumAUC/5)
+	print sumAUC/5
+	if sumAUC > best:
+            best = sumAUC
             bestI = x
-            bestA = sumA/float(5)
+            bestAUC = sumAUC/float(5)
+            bestAccuracy = sumAccuracy/float(5) 
  
-print "KNN using TfidfVectorizer with neigh " + str(bestI) +  " had the best AUC  of " + str(best/5) + "an accuracy of " + str(bestA)
+print "KNN using CountVector with neigh " + str(bestI) +  " had the best AUC  of " + str(bestAUC) + "an accuracy of " + str(bestAccuracy)

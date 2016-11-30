@@ -148,29 +148,54 @@ if __name__ == "__main__":
     predDict = pickle.load( open( "pickle/prediction.p", "rb" ))
 
     for m in models:
+        amount_of_shares = 25
         f, ax = plt.subplots(1, sharex=True)
         f.patch.set_facecolor('white')
 
         fit_model(m[0], m[1], X_train, y_train, X_test, pred)
     	signals = X_test.copy()
     	
-        signals['signal'] = predDict['KNeighborsClassifier 30']
+        signals['signal'] = predDict['AdaBoostClassifier']
         signals.signal[signals.signal == 0] = -1
         signals['positions'] = signals['signal'].diff()
-        amount_of_shares = 100
+        #amount_of_shares = 100
         bars =  pd.io.data.get_data_yahoo("^DJI", start_test, datetime.datetime(2016,07,01))
         portfolio = MarketIntradayPortfolio("^DJI", bars, signals, initial_capital = 100000.0, shares = amount_of_shares)
         returns = portfolio.backtest_portfolio()
-        returns['total'].plot(ax = ax, color='g', lw=3.)
+        returns['total'].plot(ax = ax, color='g', lw=3., label = 'Ada Boost')
 
-        print "KNN Final " + str(returns.iloc[377]['total'])
+        print "AdaBoostClassifier " + str(returns.iloc[377]['total'])
+
+        signals = X_test.copy()
+        signals['signal'] = predDict['DecisionTreeClassifier']
+        signals.signal[signals.signal == 0] = -1
+        signals['positions'] = signals['signal'].diff()
+        #amount_of_shares = 100
+        bars =  pd.io.data.get_data_yahoo("^DJI", start_test, datetime.datetime(2016,07,01))
+        portfolio = MarketIntradayPortfolio("^DJI", bars, signals, initial_capital = 100000.0, shares = amount_of_shares)
+        returns = portfolio.backtest_portfolio()
+        returns['total'].plot(ax = ax, color='c', lw=3., label = 'Decision Tree')
+
+        print "DecisionTreeClassifier " + str(returns.iloc[377]['total'])
+
+        ignals = X_test.copy()
+        signals['signal'] = predDict['KNeighborsClassifier']
+        signals.signal[signals.signal == 0] = -1
+        signals['positions'] = signals['signal'].diff()
+        
+        bars =  pd.io.data.get_data_yahoo("^DJI", start_test, datetime.datetime(2016,07,01))
+        portfolio = MarketIntradayPortfolio("^DJI", bars, signals, initial_capital = 100000.0, shares = amount_of_shares)
+        returns1 = portfolio.backtest_portfolio()
+        returns1['total'].plot(ax = ax, color='y', lw=3., label = "KNN")
+
+        print "KNeighborsClassifier " + str(returns1.iloc[377]['total'])
 
 
 
         signals['signal'] = pred['LR']
     	signals.signal[signals.signal == 0] = -1
     	signals['positions'] = signals['signal'].diff()
-    	amount_of_shares = 100
+    	#amount_of_shares = 100
     	
     	portfolio = MarketIntradayPortfolio("^DJI", bars, signals, initial_capital = 100000.0, shares = amount_of_shares)
     	returns = portfolio.backtest_portfolio()
@@ -178,12 +203,13 @@ if __name__ == "__main__":
     	
     	ylabel = symbol + ' Close Price in $'
     	bars['Open'] =  bars['Open'] * 5.5
-        bars['Open'].plot(ax=ax, color='r', lw=3.)
+        bars['Open'].plot(ax=ax, color='r', lw=3., label = 'Dow Jones')
         print  'Buy and hold ' +  str(bars.iloc[377]['Open'])
-        returns['total'].plot(ax=ax, color='b', lw=3.)
+        returns['total'].plot(ax=ax, color='b', lw=3., label = 'Log Regression')
     	ax.set_ylabel('Portfolio value in $', fontsize=18)
     	ax.set_xlabel('Date', fontsize=18)
-    	#ax[1].legend(('Portofolio Performance',), loc='upper left', prop={"size":18})
+    	legend = ax.legend(loc='upper left', shadow=True)
+        #ax[1].legend(('Portofolio Performance',), loc='upper left', prop={"size":18})
     	plt.tick_params(axis='both', which='major', labelsize=14)
     	loc = ax.xaxis.get_major_locator()
     	#loc.maxticks[DAILY] = 24

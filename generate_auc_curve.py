@@ -13,21 +13,26 @@ from sklearn.metrics 		import accuracy_score
 from sklearn.metrics 		import roc_curve, auc
 from ggplot 				import *
 from sklearn.feature_extraction.text import TfidfVectorizer, CountVectorizer
-stemmer = PorterStemmer()
-analyzer = CountVectorizer().build_analyzer()
-
-def stemmed_words(doc):
-    return (stemmer.stem(w) for w in analyzer(doc))
-
-
+from nltk.stem import PorterStemmer
+from sklearn.ensemble 					import RandomForestClassifier, AdaBoostClassifier
+from sklearn.ensemble import ExtraTreesClassifier
+import pandas
+from sklearn.naive_bayes import BernoulliNB
+from sklearn.svm 						import SVC
+import pickle
 df = pd.read_csv('stocknews/Combined_News_DJIA.csv')
 print(df.shape)
 
 matplotlib.rcParams["figure.figsize"] = "8, 8"
-df['Combined']=df.iloc[:,2:27].apply(lambda row: ''.join(str(row.values)), axis=1)
+df['Combined']=df.iloc[:,2:28].apply(lambda row: ''.join(str(row.values)), axis=1)
 
 
-train,test = train_test_split(df,test_size=0.2,random_state=42)
+#train,test = train_test_split(df,test_size=0.2,random_state=42)
+train = df[df['Date'] < '2015-01-01']
+test = df[df['Date'] > '2014-12-31']
+
+
+
 
 non_decrease = train[train['Label']==1]
 decrease = train[train['Label']==0]
@@ -50,17 +55,28 @@ for each in decrease['Combined']:
     decrease_word.append(to_words(each))
 
 
-tfidf = CountVectorizer()
-train_text = []
-test_text = []
-for each in train['Combined']:
-    train_text.append(to_words(each))
+
+testheadlines 	= []
 
 for each in test['Combined']:
-    test_text.append(to_words(each))
-train_features = tfidf.fit_transform(train_text)
-test_features = tfidf.transform(test_text)
+    #testheadlines.append(' '.join(str(x) for x in test.iloc[row,2:27]))
+    testheadlines.append(to_words(each))
 
+trainheadlines = []
+for each in train['Combined']:
+	#trainheadlines.append(' '.join(str(x) for x in train.iloc[row,2:27]))
+	trainheadlines.append(to_words(each))
+
+
+vector = CountVectorizer()
+trainvector 		= vector.fit_transform(trainheadlines)
+testvector 			= vector.transform(testheadlines)
+
+testLines = testvector
+trainLines = trainvector
+
+
+'''
 non_decrease_list = []
 decrease_list = []
 
@@ -73,7 +89,7 @@ for ele in decrease_word:
 	newList = ele.split(" ")
 	for newEle in newList:
 		non_decrease_list.append(newEle)
-
+'''
 '''
 count = 0
 for ele in decrease_list:
@@ -85,35 +101,43 @@ print count/float(len(decrease_list))
 '''
 
 Classifiers = [
-    KNeighborsClassifier(n_neighbors=150),
-    SVC(kernel="rbf", C=0.025, probability=True),
-    ]
+    KNeighborsClassifier(n_neighbors=5),
+    #SVC(kernel="rbf", C=0.025,probability=True),
+    AdaBoostClassifier(RandomForestClassifier()),
+    DecisionTreeClassifier(),
+    ExtraTreesClassifier(),
+   	]
 
-
-dense_features=train_features.toarray()
-dense_test= test_features.toarray()
+predDict = {}
 Accuracy=[]
 Model=[]
-for classifier in Classifiers:
-    try:
-        fit = classifier.fit(train_features,train['Label'])
-        pred = fit.predict(test_features)
-        prob = fit.predict_proba(test_features)[:,1]
-    except Exception:
-        fit = classifier.fit(dense_features,train['Label'])
-        pred = fit.predict(dense_test)
-        prob = fit.predict_proba(dense_test)[:,1]
-    accuracy = accuracy_score(pred,test['Label'])
-    Accuracy.append(accuracy)
-    Model.append(classifier.__class__.__name__)
-    print('Accuracy of '+classifier.__class__.__name__+' is '+str(accuracy))
-    fpr, tpr, _ = roc_curve(test['Label'],prob)
-    print('AUC of '+classifier.__class__.__name__+' is '+str(auc(tpr,fpr)))
-    print("\n")
-    tmp = pd.DataFrame(dict(fpr=fpr, tpr=tpr))
-    g = ggplot(tmp, aes(x='fpr', y='tpr')) +geom_line() +geom_abline(linetype='dashed')+ ggtitle('Roc Curve of '+classifier.__class__.__name__)
-    filename = str("AUC/")+str(classifier.__class__.__name__)+".png"
-    g.save(filename)
+label = 'Label'
+for clf in Classifiers:
+	
+	clf.fit(trainLines, train[label])
+	predictions = clf.predict(testLines)
+	matrix 			= pandas.crosstab(test[label], predictions, rownames=["Actual"], colnames=["Predicted"])
+	#print "Running Ada Boost gives accuracy of \t\t ",
+	accuracy = accuracy_score(test[label], predictions),
+	print " --- ",
+	prob = clf.predict_proba(testLines)[:,1]
+	fpr, tpr, _ = roc_curve(test[label],prob)
+	print "\t",
+	print auc(fpr,tpr),
+	#print "Running Ada Boost gives accuracy of \t\t ",
+	
+	Accuracy.append(accuracy)
+  	Model.append(clf.__class__.__name__)
+  	print('Accuracy of '+clf.__class__.__name__+' is '+str(accuracy))
+  	fpr, tpr, _ = roc_curve(test['Label'],prob)
+  	print('AUC of '+clf.__class__.__name__+' is '+str(auc(fpr,tpr)))
+ 	print("\n")
+	tmp = pd.DataFrame(dict(fpr=fpr, tpr=tpr))
+ 	g = ggplot(tmp, aes(x='fpr', y='tpr')) +geom_line() +geom_abline(linetype='dashed')+ ggtitle('Roc Curve of '+clf.__class__.__name__ + " Accuracy("+str(round(accuracy[0],4))+") with AUC of "+ str(round(auc(fpr,tpr),4)))
+ 	filename = str("AUC/")+str(clf.__class__.__name__)+".png"
+ 	#g.save(filename)
+ 	predDict[str(clf.__class__.__name__)] = predictions
+pickle.dump(predDict, open("pickle/prediction.p","wb"))
 
     #print(g)
 
