@@ -9,6 +9,9 @@ from nltk.stem.snowball import EnglishStemmer
 from multiprocessing import Manager
 from nltk.corpus 				import stopwords
 from sklearn.metrics 		import roc_curve, auc
+from sklearn.decomposition import TruncatedSVD
+
+
 
 stemmer = EnglishStemmer()
 analyzer = CountVectorizer().build_analyzer()
@@ -28,18 +31,27 @@ def stemmed_words(doc):
 def countVectorize(trainheadlines,testheadlines):
 	
 	basicvectorizer = CountVectorizer(min_df = 5)
-	basictrain 		= basicvectorizer.fit_transform(trainheadlines)
-	basictest 		= basicvectorizer.transform(testheadlines)
+	tsvd 				= TruncatedSVD(n_components=2)
+	basictrain 		= tsvd.fit_transform(basicvectorizer.fit_transform(trainheadlines))
+	basictest 		=  tsvd.transform(basicvectorizer.transform(testheadlines))
+	
+	#tsvd 				= TruncatedSVD(n_components=2)
+	#t 					= tsvd.fit_transform(trainvector)
+	#t1 					= tsvd.transform(testvector)
+
 	return basictrain, basictest, basicvectorizer
 
 
 def runKNN(basictrain,basictest, train,test, ):
+
+
+
 	label = 'Label'
 	knnDict = {}
 	maxAccuracy = 0
 	val = 0
 	#print "Beginning KNN runs"
-	for x in range(1,500):
+	for x in range(1,300):
 		neigh = KNeighborsClassifier(n_neighbors=x)
 		neigh.fit(basictrain, train[label])
 		predictions 	= neigh.predict(basictest)
@@ -52,17 +64,17 @@ def runKNN(basictrain,basictest, train,test, ):
 	return knnDict
 	
 
-def vectorize(train, test,num, return_dict):
+def vectorize(train, test,num):
 	testheadlines = []
 	trainheadlines = []
 	for each in test['Combined']: testheadlines.append(to_words(each))
 	for each in train['Combined']: trainheadlines.append(to_words(each))
 	cvtrain, cvtest, cvVector = countVectorize(trainheadlines,testheadlines)
-	return_dict[num] = runKNN(cvtrain,cvtest, train,test)
+	return runKNN(cvtrain,cvtest, train,test)
 
 
 data 	= 	pandas.read_csv("stocknews/Combined_News_DJIA.csv")
-data['Combined']=data.iloc[:,2:28].apply(lambda row: ''.join(str(row.values)), axis=1)
+data['Combined']=data.iloc[:,2:27].apply(lambda row: ''.join(str(row.values)), axis=1)
 data['Tomm_Label'] = data.Label.shift(-1)
 data = data[0:len(data)-1]
 
@@ -93,6 +105,14 @@ train5 = n5.append(n2).append(n3).append(n4)
 test5 = n1
 
 
+k1 = vectorize(train1, test1,1)
+k2 = vectorize(train2, test2,2)
+k3 = vectorize(train3, test3,3)
+k4 = vectorize(train4, test4,4)
+k5 = vectorize(train5, test5,5)
+
+
+'''
 jobs = []
 manager = Manager()
 return_dict = manager.dict()
@@ -119,19 +139,19 @@ p = multiprocessing.Process(target=vectorize, args=(train5, test5,5,return_dict,
 jobs.append(p)
 p.start()
 
-for proc in jobs:
-	proc.join()
-
+'''
 
 best = 0
 bestI = 0
 bestA = 0
 
 
-for x in range(1,500):
+for x in range(1,300):
 	#sumR = r1[x] + r2[x] + r3[x] + r4[x] + r5[x]
-	sumAUC = return_dict.values()[0][x][0] + return_dict.values()[1][x][0] + return_dict.values()[2][x][0] + return_dict.values()[3][x][0] +return_dict.values()[4][x][0]
-	sumAccuracy = return_dict.values()[0][x][1] + return_dict.values()[1][x][1] + return_dict.values()[2][x][1] + return_dict.values()[3][x][1] +return_dict.values()[4][x][1]
+	sumAUC = k1[x][0] + k2[x][0] + k3[x][0] + k4[x][0] + k5[x][0]
+	sumAccuracy = k1[x][1] + k2[x][1] + k3[x][1] + k4[x][1] + k5[x][1]
+
+
 	#print (sumAUC/5)
 	print sumAUC/5
 	if sumAUC > best:
@@ -141,3 +161,4 @@ for x in range(1,500):
             bestAccuracy = sumAccuracy/float(5) 
  
 print "KNN using CountVector with neigh " + str(bestI) +  " had the best AUC  of " + str(bestAUC) + "an accuracy of " + str(bestAccuracy)
+

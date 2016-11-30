@@ -18,6 +18,7 @@ from sklearn.ensemble 					import RandomForestClassifier, AdaBoostClassifier
 from sklearn.ensemble import ExtraTreesClassifier
 import pandas
 from sklearn.naive_bayes import BernoulliNB
+from sklearn.decomposition import TruncatedSVD
 from sklearn.svm 						import SVC
 import pickle
 df = pd.read_csv('stocknews/Combined_News_DJIA.csv')
@@ -68,12 +69,16 @@ for each in train['Combined']:
 	trainheadlines.append(to_words(each))
 
 
-vector = CountVectorizer()
+vector = CountVectorizer(ngram_range = (1,2), min_df = 2)
 trainvector 		= vector.fit_transform(trainheadlines)
 testvector 			= vector.transform(testheadlines)
+tsvd 				= TruncatedSVD(n_components=2)
+t 					= tsvd.fit_transform(trainvector)
+t1 					= tsvd.transform(testvector)
 
-testLines = testvector
-trainLines = trainvector
+
+testLines = t1
+trainLines = t
 
 
 '''
@@ -101,11 +106,11 @@ print count/float(len(decrease_list))
 '''
 
 Classifiers = [
-    KNeighborsClassifier(n_neighbors=5),
+    KNeighborsClassifier(n_neighbors=1),
     #SVC(kernel="rbf", C=0.025,probability=True),
-    AdaBoostClassifier(ExtraTreesClassifier()),
-    DecisionTreeClassifier(),
-    ExtraTreesClassifier(),
+    #AdaBoostClassifier(ExtraTreesClassifier()),
+    #DecisionTreeClassifier(),
+    #ExtraTreesClassifier(),
    	]
 
 predDict = {}
@@ -135,9 +140,9 @@ for clf in Classifiers:
 	tmp = pd.DataFrame(dict(fpr=fpr, tpr=tpr))
  	g = ggplot(tmp, aes(x='fpr', y='tpr')) +geom_line() +geom_abline(linetype='dashed')+ ggtitle('Roc Curve of '+clf.__class__.__name__ + " Accuracy("+str(round(accuracy[0],4))+") with AUC of "+ str(round(auc(fpr,tpr),4)))
  	filename = str("AUC/")+str(clf.__class__.__name__)+".png"
- 	g.save(filename)
- 	predDict[str(clf.__class__.__name__)] = predictions
-pickle.dump(predDict, open("pickle/prediction.p","wb"))
+ 	#g.save(filename)
+ 	#predDict[str(clf.__class__.__name__)] = predictions
+#pickle.dump(predDict, open("pickle/prediction.p","wb"))
 
     #print(g)
 

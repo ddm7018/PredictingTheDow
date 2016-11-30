@@ -13,6 +13,11 @@ from sklearn.metrics 		import roc_curve, auc
 from nltk.corpus 				import stopwords
 import pickle, os, re, multiprocessing
 from multiprocessing import Manager
+from sklearn.decomposition import TruncatedSVD
+
+
+
+
 import warnings
 with warnings.catch_warnings():
 	warnings.simplefilter("ignore")
@@ -31,18 +36,17 @@ def to_words(content):
 
 Vectorizers = [
 CountVectorizer(min_df = 5),
-CountVectorizer(ngram_range = (1,2), min_df = 5),
+CountVectorizer(ngram_range = (2,2), min_df = 5),
 TfidfVectorizer(min_df = 5),
-TfidfVectorizer(ngram_range=(1,2), min_df =5)
+TfidfVectorizer(ngram_range=(2,2), min_df =5)
 ]
 
 
 
 Classifiers = [
+KNeighborsClassifier(n_neighbors=5),
+BernoulliNB(),
 
-
-
-KNeighborsClassifier(n_neighbors=67),
 AdaBoostClassifier(LogisticRegression()),
 AdaBoostClassifier(RandomForestClassifier()),
 AdaBoostClassifier(ExtraTreesClassifier()),
@@ -55,10 +59,7 @@ RandomForestClassifier(),
 LogisticRegression(),
 SVC(kernel="rbf", C=0.025,probability=True),
 ExtraTreesClassifier(),
-BernoulliNB(),
-
 ]
-
 
 
 #def main():
@@ -66,14 +67,14 @@ BernoulliNB(),
 data 	= 	pandas.read_csv("stocknews/full-table.csv")
 
 #dividing up the training data per Kaggle instructions, will modify later
-train = data[data['Date'] < '2015-01-01']
-test = data[data['Date'] > '2014-12-31']
+#train = data[data['Date'] < '2015-01-01']
+#test = data[data['Date'] > '2014-12-31']
 
 data['Combined']=data.iloc[:,9:33].apply(lambda row: ''.join(str(row.values)), axis=1)
 data['Tomm_Label'] = data.Label.shift(-1)
 data = data[0:len(data)-1]
 
-#train,test 		= train_test_split(data,test_size=0.2,random_state=42)
+train,test 		= train_test_split(data,test_size=0.2,random_state=42)
 
 ### Dividing the data into test and train by dates (as specified)
 #train = data[data['Date'] < '2015-01-01']
@@ -98,7 +99,11 @@ if not os.path.isfile("pickle/vectors.p"):
 		trainvector 		= vector.fit_transform(trainheadlines)
 		testvector 			= vector.transform(testheadlines)
 		name				= vector.__class__.__name__ +" "+ str(vector.ngram_range)
-		vectorDict[name]    = [trainvector,testvector]
+		tsvd 				= TruncatedSVD(n_components=2)
+		t 					= tsvd.fit_transform(trainvector)
+		t1 					= tsvd.transform(testvector)
+
+		vectorDict[name]    = [t,t1]
 
 
 	print "Finished Vectorizing"

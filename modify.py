@@ -46,6 +46,32 @@ def classDistrubtion(combined):
 
 
 
+def classDistrubtion100(combined):
+	menMeans = (combined[combined['100Label'] == 1].shape[0], combined[combined['100Label'] == 0].shape[0])
+	ind = np.arange(2)
+	fig, ax = plt.subplots()
+	rects1 = ax.bar(ind, menMeans,align='center', alpha=0.5, color='gr')
+
+	ax.set_ylabel('# of days')
+	ax.set_title('Class Distribution')
+	ax.set_xticks(ind)
+	ax.set_xticklabels(('Label = 1', 'Label = 0'))
+
+	def autolabel(rects):
+	    # attach some text labels
+	    for rect in rects:
+	        height = rect.get_height()
+	        ax.text(rect.get_x() + rect.get_width()/2., 1.05*height,
+	                '%d' % int(height),
+	                ha='center', va='bottom')
+
+
+	plt.ylim(0,combined.shape[0])
+	autolabel(rects1)
+	plt.savefig("distribution/class-distrubtuion-100.png")
+
+
+
 def greaterDistrubtion(full):
 	listBin = []
 	for ele in range(-8,8):
@@ -88,8 +114,9 @@ full['NewLabel'] = full['Diff'].apply(diffLabel)
 
 full['100Label'] = full.Diff > 100 
 full['100Label'] = full['100Label'].astype(int)
-'''
-full.to_csv("stocknews/full-table.csv")
+
+
+#full.to_csv("stocknews/full-table.csv")
 plt.scatter(full[[ "Sentiment1"]], full['SentimentAll'], c = full['Label'])
 plt.savefig("distribution/scatter.png")
 plt.scatter(full[[ "Sentiment1"]], full['Diff'], c = full['Label'])
@@ -101,7 +128,7 @@ plt.savefig("distribution/scatter2.png")
 
 greaterDistrubtion(full)
 classDistrubtion(combined)
-'''
+classDistrubtion100(full)
 
 
 
